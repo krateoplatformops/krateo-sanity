@@ -1,33 +1,29 @@
 #!/bin/bash
 
-PROJECT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+# ==============================================================================
+# stresstest_setup.sh - Setup Krateo dependencies for stress testing
+# ==============================================================================
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common.sh" || { echo "Error: common.sh not found"; exit 1; }
+source "$SCRIPT_DIR/stresstest.conf" || { echo "Error: stresstest.conf not found"; exit 1; }
 
-kubectl create namespace stresstest-system
-kubectl create ns metrics-server
+init_common
 
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.5.0/components.yaml
-kubectl patch -n kube-system deployment metrics-server --type=json -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+log_info "Starting Krateo stress test environment setup..."
 
+# Create stress test namespace
+create_namespace_safe "$STRESSTEST_NAMESPACE"
 
-# Install deps for GithubScaffolding
-helm repo add marketplace https://marketplace.krateo.io
-helm repo update marketplace
-helm install github-provider-kog-repo marketplace/github-provider-kog-repo --namespace krateo-system --create-namespace --wait --version 1.0.0
-helm install git-provider krateo/git-provider --namespace krateo-system --create-namespace --wait --version 0.10.1
-helm repo add argo https://argoproj.github.io/argo-helm
-helm repo update argo
-helm install argocd argo/argo-cd --namespace krateo-system --create-namespace --version 8.0.17
+# Install metrics server (in kube-system namespace)
+log_info "Installing Kubernetes metrics server..."
+kubectl apply -f "$METRICS_SERVER_URL" || die "Failed to install metrics server"
 
-# Loop until the CRD repoes.github.ogen.krateo.io is ready
-while true; do
-  kubectl get crd repoes.github.ogen.krateo.io &> /dev/null
-  if [ $? -eq 0 ]; then
-    echo "CRD repoes.github.ogen.krateo.io is ready"
-    break
-  else
-    echo "Waiting for CRD repoes.github.ogen.krateo.io to be ready..."
-    sleep 5
-  fi
-done
+# Patch metrics server to use insecure TLS (for local testing)
+kubectl patch -n "$KUBE_SYSTEM_NAMESPACE" deployment metrics-server \
+    --type=json -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]' 2>/dev/null || \
+    log_warn "Could not patch metrics server (may already be patched)"
+
+log_success "Metrics server installed"
+
+log_success "Krateo stress test environment setup completed!"

@@ -1,58 +1,55 @@
 #!/bin/bash
 
 # ==============================================================================
-# Script Name: install-on-current.sh
-# Description: Installs Prometheus/Grafana on the CURRENT active cluster.
-#              Does NOT create a new cluster.
-# Usage: ./install-on-current.sh
+# monitor.sh - Monitor memory usage of Krateo pods
 # ==============================================================================
 
-set -e
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common.sh" || { echo "Error: common.sh not found"; exit 1; }
+source "$SCRIPT_DIR/stresstest.conf" || { echo "Error: stresstest.conf not found"; exit 1; }
 
-NAMESPACE="monitoring"
+init_common
 
-# 1. Verify Current Context
-# We capture the current context to ensure we are installing to the right place.
-CURRENT_CONTEXT=$(kubectl config current-context)
+# Calculate number of iterations
+ITERATIONS=$((MONITORING_DURATION_MINUTES * 60 / MONITORING_INTERVAL))
+TIMESTAMP_SUFFIX=$(date +%Y%m%d_%H%M%S)
+LOG_FILE="stresstest/${MONITORING_LOG_PREFIX}_${TIMESTAMP_SUFFIX}.log"
 
-echo "------------------------------------------------------------------"
-echo "Targeting Current Cluster Context: $CURRENT_CONTEXT"
-echo "------------------------------------------------------------------"
+log_info "Starting memory usage monitoring for ${MONITORING_DURATION_MINUTES} minutes (Snapshot every ${MONITORING_INTERVAL}s)"
+log_info "Results will be saved to: $LOG_FILE"
 
-# Simple confirmation prompt to prevent accidental installs
-read -p "Are you sure you want to install the monitoring stack here? (y/n) " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Aborting."
-    exit 1
-fi
+# Write CSV header to log file
+echo "TIMESTAMP,POD_NAME,MEMORY_USAGE_Mi" > "$LOG_FILE"
 
-# 2. Add Helm Repo
-echo "Adding Prometheus Community Helm repo..."
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
+# Monitor loop
+for ((i=1; i<=ITERATIONS; i++)); do
+    TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
+    
+    # Get memory usage for all pods in the namespace
+    kubectl top pod --namespace "$STRESSTEST_NAMESPACE" --no-headers 2>/dev/null | 
+    awk -v timestamp="$TIMESTAMP" '
+        {
+            # Get the usage value and unit
+            usage = $2
+            unit = substr(usage, length(usage)-1)
+            val = substr(usage, 1, length(usage)-2)
+            
+            # Standardize to MiB
+            if (unit == "Gi") {
+                mib_val = val * 1024
+            } else if (unit == "Mi") {
+                mib_val = val
+            } else if (unit ~ /B/) {
+                mib_val = substr(usage, 1, length(usage)-1) / 1024 / 1024
+            } else {
+                mib_val = usage
+            }
+            
+            printf "%s,%s,%.2f\n", timestamp, $1, mib_val
+        }' >> "$LOG_FILE"
+    
+    log_info "Snapshot $i/$ITERATIONS taken. Sleeping for ${MONITORING_INTERVAL}s..."
+    sleep "$MONITORING_INTERVAL"
+done
 
-# 3. Install/Upgrade kube-prometheus-stack
-echo "Installing kube-prometheus-stack in namespace '$NAMESPACE'..."
-
-# Create namespace if it doesn't exist
-kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
-
-# Install the chart
-helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-stack \
-  --namespace "$NAMESPACE" \
-  --set grafana.adminPassword="admin" \
-  --wait
-
-echo "------------------------------------------------------------------"
-echo "Installation Complete on $CURRENT_CONTEXT!"
-echo "------------------------------------------------------------------"
-
-# 4. Access Info
-GRAFANA_SERVICE_NAME=$(kubectl get svc -n "$NAMESPACE" -l app.kubernetes.io/name=grafana -o jsonpath="{.items[0].metadata.name}")
-
-echo "To access Grafana, run:"
-echo ""
-echo "  kubectl port-forward -n $NAMESPACE svc/$GRAFANA_SERVICE_NAME 3000:80"
-echo ""
-echo "Credentials: admin / admin"
+log_success "Memory monitoring completed! Data saved to: $LOG_FILE"

@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Source common utilities and configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common.sh" || { echo "Error: common.sh not found"; exit 1; }
+source "$SCRIPT_DIR/stresstest.conf" || { echo "Error: stresstest.conf not found"; exit 1; }
+
 # Define namespace and log file
 NAMESPACE="test-system"
 LOG_FILE="stresstest/memory_snapshots_$(date +%Y%m%d_%H%M%S).log"
