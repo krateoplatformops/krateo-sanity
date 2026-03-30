@@ -2,7 +2,7 @@
 
 Framework for validating Krateo installation and stress testing.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Complete Setup (All-in-One)
 ```bash
@@ -32,7 +32,7 @@ Separate, progressive installation with better control:
 ./setup/initialize_krateo.sh
 ```
 
-## 🔧 Installation Scripts
+## Installation Scripts
 
 ### Setup Directory (`setup/`)
 
@@ -94,7 +94,7 @@ Runs all three installation steps in sequence. Recommended for reproducible depl
 ./setup/initialize_krateo.sh
 ```
 
-## 📝 Configuration
+## Configuration
 
 Edit `config/common.conf` to customize installation:
 
@@ -105,7 +105,7 @@ KRATEO_SYSTEM_NAMESPACE="krateo-system"
 DEMO_SYSTEM_NAMESPACE="demo-system"
 ```
 
-## 📋 Examples
+## Examples
 
 ### Scenario 1: Fresh Installation
 ```bash
@@ -158,11 +158,10 @@ See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for:
 - Recovery procedures
 - Debug information collection
 
-## 📚 Reference
+## Reference
 
 - [Krateo Documentation](https://docs.krateo.io)
 - [krateoctl Reference](https://docs.krateo.io/getting-started/install-krateoctl)
-Works with KIND, EKS, GKE, AKS.
 
 ### kind-portal-gh-scaffolding.sh
 ```bash
@@ -178,7 +177,7 @@ Works with KIND, EKS, GKE, AKS.
 ./stresstest/setup_monitoring.sh
 ```
 
-## ⚙️ Configuration
+## Configuration Details
 
 ### common.conf (Platform)
 ```bash
@@ -197,30 +196,7 @@ DEFAULT_RESOURCE_END=5
 MONITORING_INTERVAL=60
 ```
 
-## 🌍 Multi-Cluster
-
-### EKS
-```bash
-kubectl config use-context my-eks-cluster
-./setup/initialize_krateo.sh
-./stresstest/stresstest_setup.sh
-```
-
-### GKE
-```bash
-gcloud container clusters get-credentials my-gke-cluster
-./setup/initialize_krateo.sh
-./stresstest/stresstest_setup.sh
-```
-
-### AKS
-```bash
-az aks get-credentials --resource-group myRg --name myAks
-./setup/initialize_krateo.sh
-./stresstest/stresstest_setup.sh
-```
-
-## 🔍 Verify
+## Verification
 
 ### Check Syntax
 ```bash
@@ -235,7 +211,7 @@ kubectl get portalblueprintintpages -n demo-system
 kubectl get deployments -n krateo-system
 ```
 
-## 🎯 Service Access
+## Service Access
 
 - Portal: http://localhost:30080
 - AuthN: http://localhost:30082
