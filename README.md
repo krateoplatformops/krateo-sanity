@@ -160,38 +160,50 @@ DEMO_SYSTEM_NAMESPACE="demo-system"
 
 ## Monitoring & Troubleshooting
 
-### Monitoring Setup
+### Platform Monitoring Setup
 
-For comprehensive OpenTelemetry monitoring setup including OpenTelemetry Collector and Kube-Prometheus-Stack, refer to the dedicated [Monitoring Documentation](monitoring/monitoring.md).
+For comprehensive OpenTelemetry monitoring of Krateo platform components (events, metrics, traces), refer to the dedicated [Monitoring Documentation](monitoring/monitoring.md).
 
-**Quick monitoring deployment:**
+**Enable event and resource monitoring:**
 
-Enable OpenTelemetry monitoring with the monitoring profile when installing Krateo core:
+Deploy Krateo with OpenTelemetry support using the monitoring profile:
 ```bash
-# Install with OpenTelemetry support
+# Install Krateo with event/resource monitoring enabled
 KRATEO_PROFILE="monitoring" ./setup/install_krateo_core.sh
 ```
 
-**Setup monitoring stack:**
-```bash
-# Setup stress test environment with monitoring
-./stresstest/stresstest_setup.sh
-# Start monitoring (background process)
-./stresstest/monitor.sh &
-# Setup monitoring stack (OpenTelemetry Collector + Kube-Prometheus-Stack)
-./stresstest/setup_monitoring.sh
-```
+**What this enables:**
+- `deviser`, `events-ingester`, and `events-presenter` services with OpenTelemetry enabled
+- OpenTelemetry Collector running in monitoring namespace
+- Kube-Prometheus-Stack deployed (Prometheus + Grafana)
 
 **Access monitoring dashboards:**
 - Prometheus: `http://localhost:9090`
 - Grafana: `http://localhost:3000` (credentials: admin/admin)
 
-**Prerequisites for monitoring:**
-- `deviser`, `events-ingester`, and `events-presenter` services with OpenTelemetry enabled
-- OpenTelemetry Collector running in monitoring namespace
-- Kube-Prometheus-Stack deployed
-
 For detailed setup instructions, environment configuration, and troubleshooting, see [Monitoring Documentation](monitoring/monitoring.md).
+
+### Stress Testing with Monitoring
+
+Run performance and stability tests on the Krateo platform with integrated monitoring visibility.
+
+**Setup and execute stress test with monitoring:**
+```bash
+# Setup stress test environment
+./stresstest/stresstest_setup.sh
+# Create test resources (from resource 1 to 100)
+./stresstest/stresstest_create_resources.sh 1 100
+# Check composition status during stress test
+./stresstest/stresstest_composition_status.sh
+# Start real-time cluster monitoring (background process)
+./stresstest/monitor.sh &
+# View stress test monitoring metrics
+./stresstest/stresstest_cluster_status.sh
+```
+
+**Prerequisites:**
+- Platform monitoring stack already deployed (see Platform Monitoring Setup above)
+- Stress test namespace created with `stresstest_setup.sh`
 
 ### Check Installation Status
 
@@ -231,30 +243,3 @@ See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for:
 - [Krateo Documentation](https://docs.krateo.io)
 - [krateoctl Reference](https://docs.krateo.io/getting-started/install-krateoctl)
 - [Monitoring Documentation](monitoring/monitoring.md) - OpenTelemetry, Prometheus, and Grafana setup
-
-### kind-portal-gh-scaffolding.sh
-
-Comprehensive quickstart script that combines cluster creation and full Krateo platform setup.
-
-```bash
-# Run quickstart
-./setup/kind-portal-gh-scaffolding.sh [cluster-name] [image]
-```
-
-### Stress Testing
-
-Comprehensive test suite for validating Krateo platform stability under load with integrated monitoring.
-```bash
-# Setup stress test environment
-./stresstest/stresstest_setup.sh
-# Create test resources (from resource 1 to 100)
-./stresstest/stresstest_create_resources.sh 1 100
-# Check composition status
-./stresstest/stresstest_composition_status.sh
-# Start monitoring (background process)
-./stresstest/monitor.sh &
-# Setup monitoring stack (OpenTelemetry Collector + Kube-Prometheus-Stack + Grafana)
-./stresstest/setup_monitoring.sh
-```
-
-For detailed monitoring setup guidance and configuration, see [Monitoring Documentation](monitoring/monitoring.md).
