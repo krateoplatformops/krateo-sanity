@@ -6,6 +6,7 @@ Framework for validating Krateo installation and stress testing.
 
 ### Complete Setup (All-in-One)
 ```bash
+# Run integrated quickstart
 ./setup/kind-portal-gh-scaffolding.sh
 ```
 
@@ -28,7 +29,7 @@ Separate, progressive installation with better control:
 
 ### Combined Setup (Orchestrated)
 ```bash
-# Same as all-in-one, but using individual steps
+# Execute all installation steps in sequence
 ./setup/initialize_krateo.sh
 ```
 
@@ -36,19 +37,27 @@ Separate, progressive installation with better control:
 
 ### Setup Directory (`setup/`)
 
+Creates the Kubernetes infrastructure and deploys Krateo platform components in sequence.
+
 #### `create_kind_cluster.sh` - Create Kubernetes Cluster
+
+Provisions a local Kubernetes cluster using KIND with Krateo-specific port mappings configured.
 ```bash
+# Create a new KIND cluster with specified name and node image
 ./setup/create_kind_cluster.sh [cluster-name] [node-image]
+# Example:
 ./setup/create_kind_cluster.sh my-cluster kindest/node:v1.33.4
 ```
 
 #### `install_krateo_core.sh` - Install Krateo Core Platform
-Installs Krateo core services via krateoctl (namespaces, authentication, events, portal UI).
+
+Deploys the Krateo platform core components (authentication, events, portal) using the krateoctl CLI.
 
 **Prerequisites:**
 - `krateoctl` must be installed on PATH
 
 ```bash
+# Deploy Krateo core platform
 ./setup/install_krateo_core.sh
 ```
 
@@ -59,12 +68,14 @@ Installs Krateo core services via krateoctl (namespaces, authentication, events,
 - Retrieves admin credentials
 
 #### `install_krateo_providers.sh` - Install Composition Providers
-Installs providers required for blueprint and composition support.
+
+Sets up composition providers and infrastructure components needed for blueprint management.
 
 **Prerequisites:**
 - Krateo core must be installed (run `install_krateo_core.sh` first)
 
 ```bash
+# Install composition providers
 ./setup/install_krateo_providers.sh
 ```
 
@@ -74,12 +85,14 @@ Installs providers required for blueprint and composition support.
 - `argocd` - GitOps continuous deployment
 
 #### `setup_blueprints.sh` - Setup Blueprint Definitions
-Applies composition definitions and blueprint page instances.
+
+Registers composition definitions and creates portal blueprint page instances for the Krateo UI.
 
 **Prerequisites:**
 - All providers must be installed (run `install_krateo_providers.sh` first)
 
 ```bash
+# Register blueprints and compositions
 ./setup/setup_blueprints.sh
 ```
 
@@ -88,9 +101,11 @@ Applies composition definitions and blueprint page instances.
 - `PortalBlueprintPage: github-scaffolding-with-composition-page` (demo-system)
 
 #### `initialize_krateo.sh` - Orchestrator
-Runs all three installation steps in sequence. Recommended for reproducible deployments.
+
+Automates the complete installation workflow by executing all setup scripts in the correct order.
 
 ```bash
+# Execute all installation steps in sequence
 ./setup/initialize_krateo.sh
 ```
 
@@ -99,7 +114,7 @@ Runs all three installation steps in sequence. Recommended for reproducible depl
 Edit `config/common.conf` to customize installation:
 
 ```bash
-KRATEO_VERSION="3.0.0-rc4"
+KRATEO_VERSION="3.0.0-rc8"
 KRATEO_PROFILE="debug"
 KRATEO_SYSTEM_NAMESPACE="krateo-system"
 DEMO_SYSTEM_NAMESPACE="demo-system"
@@ -109,14 +124,18 @@ DEMO_SYSTEM_NAMESPACE="demo-system"
 
 ### Scenario 1: Fresh Installation
 ```bash
+# Create cluster
 ./setup/create_kind_cluster.sh prod-cluster
-./setup/initialize_krateo.sh           # Runs all 3 installation scripts
+# Run all 3 installation scripts
+./setup/initialize_krateo.sh
+# Setup stress test environment
 ./stresstest/stresstest_setup.sh
 ```
 
 ### Scenario 2: Upgrade Only Blueprints
 ```bash
-./setup/setup_blueprints.sh            # Skip providers, just update blueprints
+# Skip providers, just update blueprints
+./setup/setup_blueprints.sh
 ```
 
 ### Scenario 3: Debug One Component
@@ -132,7 +151,11 @@ DEMO_SYSTEM_NAMESPACE="demo-system"
 ## Monitoring & Troubleshooting
 
 ### Check Installation Status
+
+Verifies that all Krateo components are properly installed and ready.
+
 ```bash
+# Verify installation status
 ./scripts/check_krateo_status.sh
 ```
 
@@ -147,8 +170,10 @@ This shows:
 If installation fails with "cannot reuse a name that is still in use":
 
 ```bash
+# Force cleanup of provider resources
 ./cleanup_providers.sh --force
-./install_krateo_providers.sh  # Retry
+# Retry provider installation
+./install_krateo_providers.sh
 ```
 
 ### View Full Troubleshooting Guide
@@ -164,15 +189,26 @@ See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for:
 - [krateoctl Reference](https://docs.krateo.io/getting-started/install-krateoctl)
 
 ### kind-portal-gh-scaffolding.sh
+
+Comprehensive quickstart script that combines cluster creation and full Krateo platform setup.
+
 ```bash
+# Run quickstart
 ./setup/kind-portal-gh-scaffolding.sh [cluster-name] [image]
 ```
 
 ### Stress Testing
+
+Test suite for validating Krateo platform stability under load.
 ```bash
+# Setup stress test environment
 ./stresstest/stresstest_setup.sh
+# Create test resources (from resource 1 to 100)
 ./stresstest/stresstest_create_resources.sh 1 100
+# Check composition status
 ./stresstest/stresstest_composition_status.sh
+# Start monitoring (background process)
 ./stresstest/monitor.sh &
+# Setup monitoring stack
 ./stresstest/setup_monitoring.sh
 ```
