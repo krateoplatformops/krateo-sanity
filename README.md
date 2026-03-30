@@ -230,16 +230,3 @@ If installation fails with "cannot reuse a name that is still in use":
 # Retry provider installation
 ./install_krateo_providers.sh
 ```
-
-### View Full Troubleshooting Guide
-See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for:
-- Common issues and solutions
-- Diagnostic commands
-- Recovery procedures
-- Debug information collection
-
-## Reference
-
-- [Krateo Documentation](https://docs.krateo.io)
-- [krateoctl Reference](https://docs.krateo.io/getting-started/install-krateoctl)
-- [Monitoring Documentation](monitoring/monitoring.md) - OpenTelemetry, Prometheus, and Grafana setup
