@@ -6,7 +6,7 @@ Framework for validating Krateo installation and stress testing.
 
 ### Complete Setup (All-in-One)
 ```bash
-./kind-portal-gh-scaffolding.sh
+./setup/kind-portal-gh-scaffolding.sh
 ```
 
 ### Manual Installation (Recommended)
@@ -14,61 +14,42 @@ Separate, progressive installation with better control:
 
 ```bash
 # 1. Create KIND cluster
-./create_kind_cluster.sh my-cluster
+./setup/create_kind_cluster.sh my-cluster
 
 # 2. Install Krateo core platform (requires krateoctl)
-./install_krateo_core.sh
+./setup/install_krateo_core.sh
 
 # 3. Install composition providers
-./install_krateo_providers.sh
+./setup/install_krateo_providers.sh
 
 # 4. Setup blueprint definitions & instances
-./setup_blueprints.sh
+./setup/setup_blueprints.sh
 ```
 
 ### Combined Setup (Orchestrated)
 ```bash
 # Same as all-in-one, but using individual steps
-./initialize_krateo.sh
-```
-
-## 📦 Structure
-
-```
-krateo-sanity/
-├── common.sh                              # Shared utilities
-├── common.conf                            # Platform configuration
-├── create_kind_cluster.sh                 # KIND cluster creation
-├── install_krateo_core.sh                 # ✨ NEW: Krateo core installation (krateoctl)
-├── install_krateo_providers.sh            # ✨ NEW: Composition providers setup
-├── setup_blueprints.sh                    # ✨ NEW: Blueprints & composition definitions
-├── initialize_krateo.sh                   # Orchestrator (runs all 3 steps above)
-├── kind-portal-gh-scaffolding.sh         # Quickstart orchestrator
-└── stresstest/
-    ├── stresstest.conf
-    ├── stresstest_setup.sh
-    ├── stresstest_create_resources.sh
-    ├── stresstest_composition_status.sh
-    ├── monitor.sh
-    └── setup_monitoring.sh
+./setup/initialize_krateo.sh
 ```
 
 ## 🔧 Installation Scripts
 
-### `create_kind_cluster.sh` - Create Kubernetes Cluster
+### Setup Directory (`setup/`)
+
+#### `create_kind_cluster.sh` - Create Kubernetes Cluster
 ```bash
-./create_kind_cluster.sh [cluster-name] [node-image]
-./create_kind_cluster.sh my-cluster kindest/node:v1.33.4
+./setup/create_kind_cluster.sh [cluster-name] [node-image]
+./setup/create_kind_cluster.sh my-cluster kindest/node:v1.33.4
 ```
 
-### `install_krateo_core.sh` - Install Krateo Core Platform
+#### `install_krateo_core.sh` - Install Krateo Core Platform
 Installs Krateo core services via krateoctl (namespaces, authentication, events, portal UI).
 
 **Prerequisites:**
 - `krateoctl` must be installed on PATH
 
 ```bash
-./install_krateo_core.sh
+./setup/install_krateo_core.sh
 ```
 
 **What it does:**
@@ -77,14 +58,14 @@ Installs Krateo core services via krateoctl (namespaces, authentication, events,
 - Runs `krateoctl install apply` with configured profile
 - Retrieves admin credentials
 
-### `install_krateo_providers.sh` - Install Composition Providers
+#### `install_krateo_providers.sh` - Install Composition Providers
 Installs providers required for blueprint and composition support.
 
 **Prerequisites:**
 - Krateo core must be installed (run `install_krateo_core.sh` first)
 
 ```bash
-./install_krateo_providers.sh
+./setup/install_krateo_providers.sh
 ```
 
 **Providers installed:**
@@ -92,30 +73,30 @@ Installs providers required for blueprint and composition support.
 - `git-provider` - Git operations provider  
 - `argocd` - GitOps continuous deployment
 
-### `setup_blueprints.sh` - Setup Blueprint Definitions
+#### `setup_blueprints.sh` - Setup Blueprint Definitions
 Applies composition definitions and blueprint page instances.
 
 **Prerequisites:**
 - All providers must be installed (run `install_krateo_providers.sh` first)
 
 ```bash
-./setup_blueprints.sh
+./setup/setup_blueprints.sh
 ```
 
 **Resources created:**
 - `CompositionDefinition: portal-blueprint-page` (krateo-system)
 - `PortalBlueprintPage: github-scaffolding-with-composition-page` (demo-system)
 
-### `initialize_krateo.sh` - Orchestrator
+#### `initialize_krateo.sh` - Orchestrator
 Runs all three installation steps in sequence. Recommended for reproducible deployments.
 
 ```bash
-./initialize_krateo.sh
+./setup/initialize_krateo.sh
 ```
 
 ## 📝 Configuration
 
-Edit `common.conf` to customize installation:
+Edit `config/common.conf` to customize installation:
 
 ```bash
 KRATEO_VERSION="3.0.0-rc4"
@@ -128,31 +109,31 @@ DEMO_SYSTEM_NAMESPACE="demo-system"
 
 ### Scenario 1: Fresh Installation
 ```bash
-./create_kind_cluster.sh prod-cluster
-./initialize_krateo.sh           # Runs all 3 installation scripts
+./setup/create_kind_cluster.sh prod-cluster
+./setup/initialize_krateo.sh           # Runs all 3 installation scripts
 ./stresstest/stresstest_setup.sh
 ```
 
 ### Scenario 2: Upgrade Only Blueprints
 ```bash
-./setup_blueprints.sh            # Skip providers, just update blueprints
+./setup/setup_blueprints.sh            # Skip providers, just update blueprints
 ```
 
 ### Scenario 3: Debug One Component
 ```bash
 # Install core only, skip rest
-./install_krateo_core.sh
+./setup/install_krateo_core.sh
 
 # Debug/fix issues, then continue
-./install_krateo_providers.sh
-./setup_blueprints.sh
+./setup/install_krateo_providers.sh
+./setup/setup_blueprints.sh
 ```
 
 ## � Monitoring & Troubleshooting
 
 ### Check Installation Status
 ```bash
-./check_krateo_status.sh
+./scripts/check_krateo_status.sh
 ```
 
 This shows:
@@ -185,7 +166,7 @@ Works with KIND, EKS, GKE, AKS.
 
 ### kind-portal-gh-scaffolding.sh
 ```bash
-./kind-portal-gh-scaffolding.sh [cluster-name] [image]
+./setup/kind-portal-gh-scaffolding.sh [cluster-name] [image]
 ```
 
 ### Stress Testing
@@ -208,7 +189,7 @@ KRATEO_AUTHN_PORT=30082
 KRATEO_EVENTS_PORT=30083
 ```
 
-### stresstest/stresstest.conf (Tests)
+### config/stresstest.conf (Tests)
 ```bash
 STRESSTEST_NAMESPACE="stresstest-system"
 DEFAULT_RESOURCE_START=1
@@ -221,21 +202,21 @@ MONITORING_INTERVAL=60
 ### EKS
 ```bash
 kubectl config use-context my-eks-cluster
-./initialize_krateo.sh
+./setup/initialize_krateo.sh
 ./stresstest/stresstest_setup.sh
 ```
 
 ### GKE
 ```bash
 gcloud container clusters get-credentials my-gke-cluster
-./initialize_krateo.sh
+./setup/initialize_krateo.sh
 ./stresstest/stresstest_setup.sh
 ```
 
 ### AKS
 ```bash
 az aks get-credentials --resource-group myRg --name myAks
-./initialize_krateo.sh
+./setup/initialize_krateo.sh
 ./stresstest/stresstest_setup.sh
 ```
 
