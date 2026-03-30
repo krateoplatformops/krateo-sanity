@@ -129,7 +129,7 @@ DEMO_SYSTEM_NAMESPACE="demo-system"
 ./setup/setup_blueprints.sh
 ```
 
-## � Monitoring & Troubleshooting
+## Monitoring & Troubleshooting
 
 ### Check Installation Status
 ```bash
