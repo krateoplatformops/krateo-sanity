@@ -2,6 +2,9 @@
 
 Framework for validating Krateo installation and stress testing.
 
+> [!WARNING]
+> This repository contains scripts and configurations intended for development, testing, and validation purposes only. These scripts should NOT be used in production environments. Use at your own risk. For production deployments, follow the official Krateo deployment documentation and implement appropriate security, monitoring, and backup strategies.
+
 ## Quick Start
 
 ### Complete Setup (All-in-One)
