@@ -124,7 +124,7 @@ Automates the complete installation workflow by executing all setup scripts in t
 Edit `config/common.conf` to customize installation:
 
 ```bash
-KRATEO_VERSION="3.0.0-rc8"
+KRATEO_VERSION="3.0.0-rc1"
 KRATEO_PROFILE="debug"
 KRATEO_SYSTEM_NAMESPACE="krateo-system"
 DEMO_SYSTEM_NAMESPACE="demo-system"
@@ -162,7 +162,7 @@ DEMO_SYSTEM_NAMESPACE="demo-system"
 
 ### Platform Monitoring Setup
 
-For comprehensive OpenTelemetry monitoring of Krateo platform components (events, metrics, traces), refer to the dedicated [Monitoring Documentation](monitoring/monitoring.md).
+For comprehensive OpenTelemetry monitoring of Krateo platform components, refer to the dedicated [Monitoring Documentation](monitoring/monitoring.md).
 
 **Enable event and resource monitoring:**
 

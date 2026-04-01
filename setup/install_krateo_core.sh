@@ -27,7 +27,7 @@ echo ""
 # Step 2: Verify krateoctl is available
 if ! command -v krateoctl &> /dev/null; then
     die "❌ krateoctl not found on PATH. Install krateoctl before proceeding:
-         https://docs.krateo.io/getting-started/install-krateoctl"
+         https://github.com/krateoplatformops/krateoctl"
 fi
 log_success "krateoctl is available"
 echo ""
@@ -37,7 +37,7 @@ log_info "Step 2: Installing Krateo core via krateoctl..."
 log_info "Version: $KRATEO_VERSION | Profile: $KRATEO_PROFILE"
 echo ""
 
-if ! ./krateoctl install apply \
+if ! krateoctl install apply \
     --version "$KRATEO_VERSION" \
     --profile "$KRATEO_PROFILE" \
     --init-secrets; then
