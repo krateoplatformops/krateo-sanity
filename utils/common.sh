@@ -207,12 +207,15 @@ validate_range() {
 apply_yaml() {
     local yaml_content="$1"
     local resource_name="${2:-resource}"
+    local error_output
     
-    if echo "$yaml_content" | kubectl apply --wait=false --grace-period=0 -f - > /dev/null 2>&1; then
+    error_output=$(echo "$yaml_content" | kubectl apply --wait=false --grace-period=0 -f - 2>&1)
+    if [ $? -eq 0 ]; then
         log_success "Applied $resource_name"
         return 0
     else
         log_error "Failed to apply $resource_name"
+        echo "$error_output" | sed 's/^/  /'  # Indent error output for readability
         return 1
     fi
 }
