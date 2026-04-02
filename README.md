@@ -187,6 +187,8 @@ KRATEO_PROFILE="monitoring" ./setup/install_krateo_core.sh
 - Prometheus: `http://localhost:9090`
 - Grafana: `http://localhost:3000` (credentials: admin/admin)
 
+You can find examples of dashboards in the `telemetry/` directory of the repositories of the components (e.g. `deviser/telemetry`).
+
 ### Stress Testing with Monitoring
 
 Run performance and stability tests on the Krateo platform with integrated monitoring visibility.
