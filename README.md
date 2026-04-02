@@ -32,7 +32,8 @@ Separate, progressive installation with better control:
 
 ### Combined Setup (Orchestrated)
 ```bash
-# Execute all installation steps in sequence
+# Execute all installation steps in sequence (Krateo core, providers, blueprints)
+# Requires a cluster to be already created (e.g. with create_kind_cluster.sh)
 ./setup/initialize_krateo.sh
 ```
 
@@ -162,7 +163,12 @@ DEMO_SYSTEM_NAMESPACE="demo-system"
 
 ### Platform Monitoring Setup
 
-For comprehensive OpenTelemetry monitoring of Krateo platform components, refer to the dedicated [Monitoring Documentation](monitoring/monitoring.md).
+**Deploy monitoring stack:**
+```bash
+./monitoring/deploy_monitoring_stack.sh
+```
+
+Note that this script is intended for development and testing environments. For production monitoring, follow best practices and customize the monitoring stack accordingly.
 
 **Enable event and resource monitoring:**
 
@@ -172,20 +178,22 @@ Deploy Krateo with OpenTelemetry support using the monitoring profile:
 KRATEO_PROFILE="monitoring" ./setup/install_krateo_core.sh
 ```
 
-**What this enables:**
+**What these steps enables:**
 - `deviser`, `events-ingester`, and `events-presenter` services with OpenTelemetry enabled
 - OpenTelemetry Collector running in monitoring namespace
-- Kube-Prometheus-Stack deployed (Prometheus + Grafana)
+- Kube-Prometheus-Stack deployed (Prometheus + Grafana) in monitoring namespace
 
-**Access monitoring dashboards:**
+**Access monitoring dashboards (dev/test):**
 - Prometheus: `http://localhost:9090`
 - Grafana: `http://localhost:3000` (credentials: admin/admin)
-
-For detailed setup instructions, environment configuration, and troubleshooting, see [Monitoring Documentation](monitoring/monitoring.md).
 
 ### Stress Testing with Monitoring
 
 Run performance and stability tests on the Krateo platform with integrated monitoring visibility.
+
+**Prerequisites:**
+- Platform monitoring stack already deployed and Krateo installed with monitoring enabled (see [Platform Monitoring Setup](#platform-monitoring-setup) above)
+- Steps `install_krateo_core.sh`, `install_krateo_providers.sh`, `setup_blueprints.sh` completed successfully
 
 **Setup and execute stress test with monitoring:**
 ```bash
@@ -196,14 +204,8 @@ Run performance and stability tests on the Krateo platform with integrated monit
 # Check composition status during stress test
 ./stresstest/stresstest_composition_status.sh
 # Start real-time cluster monitoring (background process)
-./stresstest/monitor.sh &
-# View stress test monitoring metrics
-./stresstest/stresstest_cluster_status.sh
+./stresstest/stresstest_monitor.sh demo-system & # we need to specify the namespace to monitor (which is the namespace where the CompositionDefinition is installed to check the CDC status)
 ```
-
-**Prerequisites:**
-- Platform monitoring stack already deployed (see Platform Monitoring Setup above)
-- Stress test namespace created with `stresstest_setup.sh`
 
 ### Check Installation Status
 
