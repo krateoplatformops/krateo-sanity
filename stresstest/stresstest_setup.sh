@@ -24,6 +24,8 @@ kubectl patch -n "$KUBE_SYSTEM_NAMESPACE" deployment metrics-server \
     --type=json -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]' 2>/dev/null || \
     log_warn "Could not patch metrics server (may already be patched)"
 
+# TODO: Add check to verify metrics server is up and running before proceeding
+
 log_success "Metrics server installed"
 
 log_success "Krateo stress test environment setup completed!"

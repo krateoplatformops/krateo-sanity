@@ -1,8 +1,10 @@
 # Monitoring setup
 
-This document provides instructions on how to set up OpenTelemetry monitoring for the `deviser`, `events-ingester`, and `events-presenter` services using OpenTelemetry Collector and kube-prometheus-stack.
+This document provides manual instructions on how to set up OpenTelemetry monitoring for the `deviser`, `events-ingester`, and `events-presenter` services using OpenTelemetry Collector and kube-prometheus-stack.
 
-> **Warning:** This setup is intended for development and testing purposes. For production environments, additional configuration and security measures should be implemented.
+You can also use the provided script `deploy_monitoring_stack.sh` to automate the deployment of the monitoring stack.
+
+> **Warning:** This setup is intended for development and testing purpose ONLY. For production environments, additional configuration and security measures should be implemented.
 
 ## Prerequisites
 
