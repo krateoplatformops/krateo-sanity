@@ -33,7 +33,7 @@ COUNT=$((END_INDEX - START_INDEX + 1))
 
 # YAML template for Krateo resources
 read -r -d '' YAML_TEMPLATE << 'EOF'
-apiVersion: composition.krateo.io/v1-2-4
+apiVersion: composition.krateo.io/v1-2-5
 kind: GithubScaffoldingWithCompositionPage
 metadata:
   name: RESOURCE_NAME
