@@ -78,7 +78,7 @@ spec:
   blueprint:
     repo: github-scaffolding-with-composition-page
     url: https://marketplace.krateo.io
-    version: 1.2.4
+    version: 1.2.5
     hasPage: true
   form:
     alphabeticalOrder: false
