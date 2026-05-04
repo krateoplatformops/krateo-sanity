@@ -297,6 +297,127 @@ get_resources_by_status() {
 }
 
 # ============================================================================
+# Version Resolution Functions
+# ============================================================================
+
+# Fetch latest release from GitHub API (including pre-releases)
+# Tries releases endpoint first, falls back to tags endpoint
+# Usage: get_latest_github_release "krateoplatformops" "releases" ["include-rc"]
+get_latest_github_release() {
+    local owner="$1"
+    local repo="$2"
+    local include_rc="${3:-true}"
+    
+    if ! command -v jq &> /dev/null; then
+        log_error "jq is required for version resolution"
+        return 1
+    fi
+    
+    local response
+    local latest_tag
+    
+    # Try releases endpoint first
+    local api_url="https://api.github.com/repos/$owner/$repo/releases"
+    response=$(curl -s --max-time 10 "$api_url" 2>/dev/null)
+    
+    if [ -z "$response" ]; then
+        log_error "Failed to fetch releases from GitHub API for $owner/$repo"
+        return 1
+    fi
+    
+    # Check if we got releases
+    if [ "$include_rc" = "true" ]; then
+        latest_tag=$(echo "$response" | jq -r '.[0].tag_name' 2>/dev/null)
+    else
+        # Exclude pre-releases from releases endpoint
+        latest_tag=$(echo "$response" | jq -r '.[] | select(.prerelease == false) | .tag_name' 2>/dev/null | head -1)
+    fi
+    
+    # If no releases, try tags endpoint as fallback
+    if [ -z "$latest_tag" ] || [ "$latest_tag" = "null" ]; then
+        api_url="https://api.github.com/repos/$owner/$repo/tags"
+        response=$(curl -s --max-time 10 "$api_url" 2>/dev/null)
+        
+        if [ -n "$response" ] && [ "$response" != "[]" ]; then
+            if [ "$include_rc" = "true" ]; then
+                # Get latest tag (first in list)
+                latest_tag=$(echo "$response" | jq -r '.[0].name' 2>/dev/null)
+            else
+                # Filter out RC/alpha/beta/dev versions - keep only stable versions
+                latest_tag=$(echo "$response" | jq -r '.[] | select(.name | test("-rc|-alpha|-beta|-dev"; "i") | not) | .name' 2>/dev/null | head -1)
+                
+                # If no stable versions found, still return empty (don't fall back to RC)
+                if [ -z "$latest_tag" ] || [ "$latest_tag" = "null" ]; then
+                    return 1
+                fi
+            fi
+        fi
+    fi
+    
+    if [ -z "$latest_tag" ] || [ "$latest_tag" = "null" ]; then
+        return 1
+    fi
+    
+    # Clean up tag name (remove leading 'v' if present)
+    echo "$latest_tag" | sed 's/^v//'
+}
+
+# Fetch latest release with fallback to default version
+# Usage: get_version "krateoplatformops" "krateoctl" "0.1.0" "true"
+# NOTE: Only outputs the version to stdout (logging goes to stderr)
+get_version() {
+    local owner="$1"
+    local repo="$2"
+    local default_version="$3"
+    local include_rc="${4:-true}"
+    
+    if [ $# -lt 2 ]; then
+        log_error "get_version requires at least: owner repo [default_version] [include_rc]" >&2
+        return 1
+    fi
+    
+    local latest_version
+    latest_version=$(get_latest_github_release "$owner" "$repo" "$include_rc")
+    
+    # If fetch failed or returned empty, use default version
+    if [ -z "$latest_version" ]; then
+        log_warn "Failed to fetch latest release for $owner/$repo, using default: $default_version" >&2
+        echo "$default_version"
+        return 0
+    fi
+    
+    log_info "Latest version for $owner/$repo: $latest_version" >&2
+    echo "$latest_version"
+}
+
+# Get latest Helm chart version from Helm repository
+# Usage: get_latest_helm_chart_version "krateo/git-provider"
+# NOTE: Only outputs the version to stdout (logging goes to stderr)
+get_latest_helm_chart_version() {
+    local chart_name="$1"
+    local repo_name="${chart_name%%/*}"
+    local chart="${chart_name##*/}"
+    
+    if ! command -v helm &> /dev/null; then
+        log_error "helm is required for chart version resolution" >&2
+        return 1
+    fi
+    
+    # Ensure repo is updated (output to stderr)
+    helm repo update "$repo_name" > /dev/null 2>&1 || {
+        log_warn "Failed to update Helm repo: $repo_name" >&2
+        return 1
+    }
+    
+    # Search for latest version and only output version to stdout
+    helm search repo "$chart_name" --output json 2>/dev/null | \
+        jq -r '.[0].version' 2>/dev/null || {
+        log_error "Failed to find chart: $chart_name" >&2
+        return 1
+    }
+}
+
+# ============================================================================
 # Confirmation Functions
 # ============================================================================
 

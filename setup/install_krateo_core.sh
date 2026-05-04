@@ -32,8 +32,19 @@ fi
 log_success "krateoctl is available"
 echo ""
 
+# Step 2b: Resolve KRATEO_VERSION dynamically if not explicitly set
+if [ "$KRATEO_VERSION" = "3.0.0-rc1" ] && [ -z "$KRATEO_VERSION_EXPLICIT" ]; then
+    log_info "Step 2b: Resolving latest Krateo version from GitHub..."
+    RESOLVED_VERSION=$(get_version "krateoplatformops" "releases" "3.0.0-rc1" "$KRATEO_INCLUDE_RC")
+    if [ -n "$RESOLVED_VERSION" ]; then
+        KRATEO_VERSION="$RESOLVED_VERSION"
+        log_success "Resolved version: $KRATEO_VERSION"
+    fi
+fi
+echo ""
+
 # Step 3: Install Krateo core via krateoctl
-log_info "Step 2: Installing Krateo core via krateoctl..."
+log_info "Step 3: Installing Krateo core via krateoctl..."
 log_info "Version: $KRATEO_VERSION | Profile: $KRATEO_PROFILE"
 echo ""
 
@@ -47,7 +58,7 @@ log_success "Krateo core installed successfully"
 echo ""
 
 # Step 4: Verify installation
-log_info "Step 3: Verifying Krateo installation..."
+log_info "Step 4: Verifying Krateo installation..."
 sleep 2
 
 KRATEO_INSTALLATION=$(kubectl get installation -n "$KRATEO_SYSTEM_NAMESPACE" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
@@ -59,7 +70,7 @@ fi
 echo ""
 
 # Step 5: Retrieve admin credentials
-log_info "Step 4: Retrieving admin credentials..."
+log_info "Step 5: Retrieving admin credentials..."
 ADMIN_PASSWORD=$(kubectl get secret admin-password -n "$KRATEO_SYSTEM_NAMESPACE" -o jsonpath="{.data.password}" 2>/dev/null | base64 -d 2>/dev/null)
 if [ -z "$ADMIN_PASSWORD" ]; then
     log_warn "⚠️  admin-password secret not found yet - may still be initializing"

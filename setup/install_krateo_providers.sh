@@ -38,15 +38,42 @@ add_helm_repo "marketplace" "$MARKETPLACE_REPO_URL"
 log_success "Helm repositories added"
 echo ""
 
+# Step 2b: Resolve provider versions dynamically if not explicitly set
+log_info "Step 2b: Resolving latest provider versions..."
+if [ "$GITHUB_PROVIDER_KOG_REPO_VERSION" = "1.0.0" ] && [ -z "$GITHUB_PROVIDER_KOG_REPO_VERSION_EXPLICIT" ]; then
+    RESOLVED_VERSION=$(get_latest_helm_chart_version "marketplace/github-provider-kog-repo")
+    if [ -n "$RESOLVED_VERSION" ]; then
+        GITHUB_PROVIDER_KOG_REPO_VERSION="$RESOLVED_VERSION"
+        log_info "  ✓ github-provider-kog-repo: $GITHUB_PROVIDER_KOG_REPO_VERSION"
+    fi
+fi
+
+if [ "$GIT_PROVIDER_VERSION" = "0.10.1" ] && [ -z "$GIT_PROVIDER_VERSION_EXPLICIT" ]; then
+    RESOLVED_VERSION=$(get_latest_helm_chart_version "krateo/git-provider")
+    if [ -n "$RESOLVED_VERSION" ]; then
+        GIT_PROVIDER_VERSION="$RESOLVED_VERSION"
+        log_info "  ✓ git-provider: $GIT_PROVIDER_VERSION"
+    fi
+fi
+
+if [ "$ARGOCD_VERSION" = "8.0.17" ] && [ -z "$ARGOCD_VERSION_EXPLICIT" ]; then
+    RESOLVED_VERSION=$(get_latest_helm_chart_version "argo/argo-cd")
+    if [ -n "$RESOLVED_VERSION" ]; then
+        ARGOCD_VERSION="$RESOLVED_VERSION"
+        log_info "  ✓ argocd: $ARGOCD_VERSION"
+    fi
+fi
+echo ""
+
 # Step 3: Install or upgrade github-provider-kog-repo
-log_info "Step 2: Installing github-provider-kog-repo..."
+log_info "Step 3: Installing github-provider-kog-repo..."
 if helm list -n "$KRATEO_SYSTEM_NAMESPACE" | grep -q "^github-provider-kog-repo"; then
     log_info "Release already exists, upgrading..."
     if ! helm upgrade github-provider-kog-repo marketplace/github-provider-kog-repo \
         --namespace "$KRATEO_SYSTEM_NAMESPACE" \
         --wait \
         --timeout 5m \
-        --version 1.0.0; then
+        --version "$GITHUB_PROVIDER_KOG_REPO_VERSION"; then
         die "Failed to upgrade github-provider-kog-repo"
     fi
 else
@@ -55,7 +82,7 @@ else
         --create-namespace \
         --wait \
         --timeout 5m \
-        --version 1.0.0; then
+        --version "$GITHUB_PROVIDER_KOG_REPO_VERSION"; then
         die "Failed to install github-provider-kog-repo"
     fi
 fi
@@ -63,14 +90,14 @@ log_success "github-provider-kog-repo installed"
 echo ""
 
 # Step 4: Install or upgrade git-provider
-log_info "Step 3: Installing git-provider..."
+log_info "Step 4: Installing git-provider..."
 if helm list -n "$KRATEO_SYSTEM_NAMESPACE" | grep -q "^git-provider"; then
     log_info "Release already exists, upgrading..."
     if ! helm upgrade git-provider krateo/git-provider \
         --namespace "$KRATEO_SYSTEM_NAMESPACE" \
         --wait \
         --timeout 5m \
-        --version 0.10.1; then
+        --version "$GIT_PROVIDER_VERSION"; then
         die "Failed to upgrade git-provider"
     fi
 else
@@ -79,7 +106,7 @@ else
         --create-namespace \
         --wait \
         --timeout 5m \
-        --version 0.10.1; then
+        --version "$GIT_PROVIDER_VERSION"; then
         die "Failed to install git-provider"
     fi
 fi
@@ -87,14 +114,14 @@ log_success "git-provider installed"
 echo ""
 
 # Step 5: Install or upgrade ArgoCD
-log_info "Step 4: Installing ArgoCD..."
+log_info "Step 5: Installing ArgoCD..."
 if helm list -n "$KRATEO_SYSTEM_NAMESPACE" | grep -q "^argocd"; then
     log_info "Release already exists, upgrading..."
     if ! helm upgrade argocd argo/argo-cd \
         --namespace "$KRATEO_SYSTEM_NAMESPACE" \
         --wait \
         --timeout 5m \
-        --version 8.0.17; then
+        --version "$ARGOCD_VERSION"; then
         die "Failed to upgrade argocd"
     fi
 else
@@ -103,7 +130,7 @@ else
         --create-namespace \
         --wait \
         --timeout 5m \
-        --version 8.0.17; then
+        --version "$ARGOCD_VERSION"; then
         die "Failed to install argocd"
     fi
 fi
