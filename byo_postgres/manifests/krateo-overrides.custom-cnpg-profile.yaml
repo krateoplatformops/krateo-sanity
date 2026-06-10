@@ -1,0 +1,65 @@
+# Template (rendered by byo_render -> $BYO_RUN_DIR/krateo-overrides.custom-cnpg-profile.yaml).
+#
+# This is the custom profile from step 3 of the Bring Your Own PostgreSQL guide.
+# It points every DB-dependent component at the external PostgreSQL Service
+# instead of the (disabled) CNPG cluster. krateoctl resolves it as a local
+# profile file because it does not exist in the remote releases repo.
+#
+# secret.name   -> krateo-db (DB_USER + DB_PASS), used by ingesters + deviser
+# dbSecret.name -> krateo-db, used by presenters
+components:
+  db-maintenance:
+    stepConfig:
+      install-deviser:
+        with:
+          values:
+            config:
+              DB_HOST: "@@DB_HOST@@"
+              DB_PORT: "@@DB_PORT@@"
+              DB_NAME: "@@KRATEO_DB_NAME@@"
+            secret:
+              name: krateo-db
+
+  resources-stack:
+    stepConfig:
+      install-resources-ingester:
+        with:
+          values:
+            config:
+              DB_HOST: "@@DB_HOST@@"
+              DB_PORT: "@@DB_PORT@@"
+              DB_NAME: "@@KRATEO_DB_NAME@@"
+            secret:
+              name: krateo-db
+      install-resources-presenter:
+        with:
+          values:
+            config:
+              # Single external instance: the presenter uses the same endpoint
+              # as everyone else (no separate read-only host).
+              DB_HOST: "@@DB_HOST@@"
+              DB_PORT: "@@DB_PORT@@"
+              DB_NAME: "@@KRATEO_DB_NAME@@"
+            dbSecret:
+              name: krateo-db
+
+  events-stack:
+    stepConfig:
+      install-events-ingester:
+        with:
+          values:
+            config:
+              DB_HOST: "@@DB_HOST@@"
+              DB_PORT: "@@DB_PORT@@"
+              DB_NAME: "@@KRATEO_DB_NAME@@"
+            secret:
+              name: krateo-db
+      install-events-presenter:
+        with:
+          values:
+            config:
+              DB_HOST: "@@DB_HOST@@"
+              DB_PORT: "@@DB_PORT@@"
+              DB_NAME: "@@KRATEO_DB_NAME@@"
+            dbSecret:
+              name: krateo-db
