@@ -1,0 +1,84 @@
+# Template (rendered by byo_render -> $BYO_RUN_DIR/postgres.yaml).
+# A plain, single-instance PostgreSQL standing in for an externally operated
+# database. It is intentionally NOT managed by CNPG: this is the "bring your
+# own" instance. Storage is ephemeral (emptyDir) -- fine for an e2e.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: "@@EXTERNAL_DB_NAMESPACE@@"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "@@EXTERNAL_DB_NAME@@"
+  namespace: "@@EXTERNAL_DB_NAMESPACE@@"
+  labels:
+    app: "@@EXTERNAL_DB_NAME@@"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "@@EXTERNAL_DB_NAME@@"
+  template:
+    metadata:
+      labels:
+        app: "@@EXTERNAL_DB_NAME@@"
+    spec:
+      containers:
+        - name: postgres
+          image: "@@POSTGRES_IMAGE@@"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_USER
+              value: "@@POSTGRES_SUPERUSER@@"
+            - name: POSTGRES_PASSWORD
+              value: "@@POSTGRES_SUPERUSER_PASSWORD@@"
+            # Keep the default maintenance database; Krateo's database is
+            # created later by the documented provisioning SQL.
+            - name: POSTGRES_DB
+              value: postgres
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "@@POSTGRES_SUPERUSER@@", "-d", "postgres"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "@@POSTGRES_SUPERUSER@@", "-d", "postgres"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "@@EXTERNAL_DB_NAME@@"
+  namespace: "@@EXTERNAL_DB_NAMESPACE@@"
+  labels:
+    app: "@@EXTERNAL_DB_NAME@@"
+spec:
+  selector:
+    app: "@@EXTERNAL_DB_NAME@@"
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP

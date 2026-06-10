@@ -1,0 +1,16 @@
+# Template (rendered by byo_render -> $BYO_RUN_DIR/krateo-overrides.custom-deviser-image.yaml).
+#
+# OPTIONAL profile, used only when DEVISER_IMAGE_REPOSITORY is set. It pins the
+# deviser container image so the test can validate a specific (e.g. pre-release)
+# deviser build against the BYO flow, without changing anything else. Appended
+# last in the --profile list so it overrides only the image.
+components:
+  db-maintenance:
+    stepConfig:
+      install-deviser:
+        with:
+          values:
+            image:
+              repository: "@@DEVISER_IMAGE_REPOSITORY@@"
+              tag: "@@DEVISER_IMAGE_TAG@@"
+              pullPolicy: "@@DEVISER_IMAGE_PULL_POLICY@@"
